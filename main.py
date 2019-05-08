@@ -4,7 +4,7 @@ from xml.etree import ElementTree as ET
 import time
 import os
 
-ReseveCnt = "1"
+ReseveCnt = "2"
 preferredSeatLineStart = "E"
 preferredSeatNoStart = 7
 preferredSeatLineEnd = "I"
@@ -33,6 +33,13 @@ seatRating = "01"
 ticketType = "01"
 
 # 판교 theaterCode : 0181
+
+
+def notify(ttl, text):
+    logging.debug("Displayed notification.")
+    os.system("""
+              osascript -e 'display notification "{}" with title "{}"'
+              """.format(text, ttl))
 
 
 def generate_reservation_data(seat_line, seat_no, seat_loc_no):
@@ -90,27 +97,14 @@ if __name__ == "__main__":
         try:
             count += 1
             conn = http.client.HTTPConnection("ticket.cgv.co.kr")
-            payload = ["{"
-                      "\"REQSITE\":\"x02PG4EcdFrHKluSEQQh4A==\","
-                      "\"Language\":\"zqWM417GS6dxQ7CIf65+iA==\","
-                      "\"TheaterCd\":\"ayfHrHXNMdZ7VoODaqnlug==\","
-                      "\"PlayYMD\":\"kr7ux111zGQ1/pidWK2Gaw==\","
-                      "\"ScreenCd\":\"AmhNIZREuaUclhpBeWoJdg==\","
-                      "\"PlayNum\":\"hlrIVsrgDYMr7PQdmwAA4w==\"}"]
-            # 용아맥 0505 2230
-            payload = ["{\"REQSITE\":\"x02PG4EcdFrHKluSEQQh4A==\",\"Language\":\"zqWM417GS6dxQ7CIf65+iA==\",\"TheaterCd\":\"LMP+XuzWskJLFG41YQ7HGA==\",\"PlayYMD\":\"eWoa/YfzV3T4/Qb+nz9p/A==\",\"ScreenCd\":\"puE6q/PuILVnVlbgI8uHnA==\",\"PlayNum\":\"GQ4XBvPgo294+v/kGdDx+Q==\"}"]
-            # 판교 imax 0505 1905
-            # payload = ["{\"REQSITE\":\"x02PG4EcdFrHKluSEQQh4A==\",\"Language\":\"zqWM417GS6dxQ7CIf65+iA==\",\"TheaterCd\":\"ayfHrHXNMdZ7VoODaqnlug==\",\"PlayYMD\":\"eWoa/YfzV3T4/Qb+nz9p/A==\",\"ScreenCd\":\"am6yhfEj+mm3cbYmAGVHIA==\",\"PlayNum\":\"K69H87N+CcalH4eFao/hAQ==\"}",
-            #             "{\"REQSITE\":\"x02PG4EcdFrHKluSEQQh4A==\",\"Language\":\"zqWM417GS6dxQ7CIf65+iA==\",\"TheaterCd\":\"ayfHrHXNMdZ7VoODaqnlug==\",\"PlayYMD\":\"eWoa/YfzV3T4/Qb+nz9p/A==\",\"ScreenCd\":\"am6yhfEj+mm3cbYmAGVHIA==\",\"PlayNum\":\"GQ4XBvPgo294+v/kGdDx+Q==\"}"]
-            #
-            # payload = "{" \
-            #           "\"REQSITE\":\"x02PG4EcdFrHKluSEQQh4A==\"," \
-            #           "\"Language\":\"zqWM417GS6dxQ7CIf65+iA==\"," \
-            #           "\"TheaterCd\":\"" + theaterCode + "\"," \
-            #           "\"PlayYMD\":\"" + playYMD + "\"," \
-            #           "\"ScreenCd\":\"" + screenCode + "\"," \
-            #           "\"PlayNum\":\"" + playNum + "\"" \
-            #           "}"
+            # 용아맥 0512 1415
+            payload1 = ["{\"REQSITE\":\"x02PG4EcdFrHKluSEQQh4A==\",\"Language\":\"zqWM417GS6dxQ7CIf65+iA==\",\"TheaterCd\":\"LMP+XuzWskJLFG41YQ7HGA==\",\"PlayYMD\":\"JFQ+RQXJ8Uin2E/NDXx6+Q==\",\"ScreenCd\":\"puE6q/PuILVnVlbgI8uHnA==\",\"PlayNum\":\"hlrIVsrgDYMr7PQdmwAA4w==\"}", "14:15"]
+            # 용아맥 0512 1745
+            payload2 = ["{\"REQSITE\":\"x02PG4EcdFrHKluSEQQh4A==\",\"Language\":\"zqWM417GS6dxQ7CIf65+iA==\",\"TheaterCd\":\"LMP+XuzWskJLFG41YQ7HGA==\",\"PlayYMD\":\"JFQ+RQXJ8Uin2E/NDXx6+Q==\",\"ScreenCd\":\"puE6q/PuILVnVlbgI8uHnA==\",\"PlayNum\":\"K69H87N+CcalH4eFao/hAQ==\"}", "17:45"]
+            # 용아맥 0512 2115
+            payload3 = ["{\"REQSITE\":\"x02PG4EcdFrHKluSEQQh4A==\",\"Language\":\"zqWM417GS6dxQ7CIf65+iA==\",\"TheaterCd\":\"LMP+XuzWskJLFG41YQ7HGA==\",\"PlayYMD\":\"JFQ+RQXJ8Uin2E/NDXx6+Q==\",\"ScreenCd\":\"puE6q/PuILVnVlbgI8uHnA==\",\"PlayNum\":\"GQ4XBvPgo294+v/kGdDx+Q==\"}", "21:15"]
+
+            payload = [payload1[0], payload2[0], payload3[0]]
             headers = {
                 'accept': "application/json, text/javascript, */*; q=0.01",
                 'origin': "http://ticket.cgv.co.kr",
@@ -152,6 +146,7 @@ if __name__ == "__main__":
                                 a = zip(seat_info["loc_y_nm"], seat_info["seat_no"], seat_info["seat_loc_no"])
                                 print(*a)
                                 os.system('say "I got a ticket"')
+                                notify("Got CGV Ticket", payload[count % len(payload)][1])
                                 os.system('say "I got a ticket"')
                                 os.system('say "I got a ticket"')
                                 os.system('say "I got a ticket"')
@@ -170,7 +165,7 @@ if __name__ == "__main__":
                         conn_seat = 0
                         continue
             print(".", end='', flush=True)
-            time.sleep(1)
+            time.sleep(2 / len(payload))
         except Exception as e:
             print("Error", e)
             os.system('say "Error"')
