@@ -1,85 +1,35 @@
 import http.client
 import json
-from xml.etree import ElementTree as ET
+from xml.etree import ElementTree
 import time
 import os
 
-ReseveCnt = "2"
-preferredSeatLineStart = "E"
-preferredSeatNoStart = 7
-preferredSeatLineEnd = "I"
-preferredSeatNoEnd = 12
+os_name = os.name
 
-# 용아맥
-preferredSeatLineStart = "F"
+# 구하는 인원 수
+num_of_people = "2"
+
+# 대충 보면 알것같고..
+preferredSeatLineStart = "A"
 preferredSeatNoStart = 12
 preferredSeatLineEnd = "L"
 preferredSeatNoEnd = 32
 
-id = "parkjy1917"
-mobileNo = "010-9766-2526"
-movieCode = ""
-playTimeCode = ""
-playNum = ""
-
-theaterCode = ""
-playYMD = ""
-screenCode = ""
-playNum = ""
-SOCIAL_NO = "900104"
-seatInfo = "00102101"
-seatPrice = "21000"
-seatRating = "01"
-ticketType = "01"
-
-# 판교 theaterCode : 0181
+# 한자리만 찾아도 일단 알려주길 원한다면 True
+also_notify_just_one = False
 
 
-def notify(ttl, text):
-    logging.debug("Displayed notification.")
-    os.system("""
-              osascript -e 'display notification "{}" with title "{}"'
-              """.format(text, ttl))
+payloads_with_data = [
+    ["{\"REQSITE\":\"x02PG4EcdFrHKluSEQQh4A==\",\"Language\":\"zqWM417GS6dxQ7CIf65+iA==\",\"TheaterCd\":\"LMP+XuzWskJLFG41YQ7HGA==\",\"PlayYMD\":\"JFQ+RQXJ8Uin2E/NDXx6+Q==\",\"ScreenCd\":\"puE6q/PuILVnVlbgI8uHnA==\",\"PlayNum\":\"hlrIVsrgDYMr7PQdmwAA4w==\"}", "용아맥 0512 1415"],
+    ["{\"REQSITE\":\"x02PG4EcdFrHKluSEQQh4A==\",\"Language\":\"zqWM417GS6dxQ7CIf65+iA==\",\"TheaterCd\":\"LMP+XuzWskJLFG41YQ7HGA==\",\"PlayYMD\":\"JFQ+RQXJ8Uin2E/NDXx6+Q==\",\"ScreenCd\":\"puE6q/PuILVnVlbgI8uHnA==\",\"PlayNum\":\"K69H87N+CcalH4eFao/hAQ==\"}", "용아맥 0512 1745"],
+    ["{\"REQSITE\":\"x02PG4EcdFrHKluSEQQh4A==\",\"Language\":\"zqWM417GS6dxQ7CIf65+iA==\",\"TheaterCd\":\"LMP+XuzWskJLFG41YQ7HGA==\",\"PlayYMD\":\"JFQ+RQXJ8Uin2E/NDXx6+Q==\",\"ScreenCd\":\"puE6q/PuILVnVlbgI8uHnA==\",\"PlayNum\":\"GQ4XBvPgo294+v/kGdDx+Q==\"}", "용아맥 0512 2115"]
+]
 
 
-def generate_reservation_data(seat_line, seat_no, seat_loc_no):
-    conn = http.client.HTTPConnection("ticket.cgv.co.kr")
-    payload = "{" \
-              "\"REQSITE\":\"x02PG4EcdFrHKluSEQQh4A==\"," \
-              "\"TheaterCd\":\"ayfHrHXNMdZ7VoODaqnlug==\"," \
-              "\"PlayYMD\":\"kr7ux111zGQ1/pidWK2Gaw==\"," \
-              "\"ScreenCd\":\"AmhNIZREuaUclhpBeWoJdg==\"," \
-              "\"PlayNum\":\"hlrIVsrgDYMr7PQdmwAA4w==\"," \
-              "\"ReseveCnt\":\"eUHdeAgG0OAi96HPh0I1jQ==\"," \
-              "\"SeatInfo\":\"AQb1Ev1VgWCEK/psPuCJULzRpHwcVB4rKvEAN45eros=\"," \
-              "\"SeatRatingInfo\":\"JY3R6evneBB0ubbtS69Bxg==\"," \
-              "\"TicketTypeInfo\":\"JKahvX/IzoOspxVsincD7w==\"," \
-              "\"SeatPriceInfo\":\"I0svAL3VT5du2F75enhqiw==\"," \
-              "\"LOC_Y_NM\":\"3yVaocx2Foot4wP7qlkaAQ==\"," \
-              "\"SEAT_NM\":\"1sgD+d0CJdh8uNTABI9w1Q==\"," \
-              "\"MEMBER_ID\":\"DhwdZi7eU7NZ7Tx5V/fqYQ==\"," \
-              "\"SOCIAL_NO\":\"CG/Wetx/wrujVmtVQma7FQ==\"," \
-              "\"MOBILE_NO\":\"fgmM0LXYb1/JmBdnVTFkNF3CNFM0FOcMCf+7KCV3ncw=\"," \
-              "\"MOVIE_CD\":\"loLhfGqBSIvZFUdh9agR8w==\"," \
-              "\"PLAY_TIME_CD\":\"rx1JL+MSPjub5lRmoqM/FA==\"" \
-              "}"
-    headers = {
-        'accept': "application/json, text/javascript, */*; q=0.01",
-        'origin': "http://ticket.cgv.co.kr",
-        'x-requested-with': "XMLHttpRequest",
-        'user-agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36",
-        'content-type': "application/json",
-        'cache-control': "no-cache"
-        }
-
-    conn.request("POST", "/CGV2011/RIA/CJ000.aspx/CJ_003_4th", payload, headers)
-
-    res = conn.getresponse()
-    data = res.read()
-
-    jsonDict = json.loads(data)
-    xmlTree = ET.ElementTree(ET.fromstring(jsonDict['d']['data']['DATA']))
-    root = xmlTree.getroot()
+def notify(title, subtitle, message):
+    if os_name == "Darwin" or "posix":
+        os.system('osascript -e \'display notification "' + message + '" with title "' + title + '" subtitle "' + subtitle + '"\'')
+        os.system('say "I got a ticket"')
 
 
 def check_seat_preferred_line(avail):
@@ -97,14 +47,14 @@ if __name__ == "__main__":
         try:
             count += 1
             conn = http.client.HTTPConnection("ticket.cgv.co.kr")
-            # 용아맥 0512 1415
-            payload1 = ["{\"REQSITE\":\"x02PG4EcdFrHKluSEQQh4A==\",\"Language\":\"zqWM417GS6dxQ7CIf65+iA==\",\"TheaterCd\":\"LMP+XuzWskJLFG41YQ7HGA==\",\"PlayYMD\":\"JFQ+RQXJ8Uin2E/NDXx6+Q==\",\"ScreenCd\":\"puE6q/PuILVnVlbgI8uHnA==\",\"PlayNum\":\"hlrIVsrgDYMr7PQdmwAA4w==\"}", "14:15"]
-            # 용아맥 0512 1745
-            payload2 = ["{\"REQSITE\":\"x02PG4EcdFrHKluSEQQh4A==\",\"Language\":\"zqWM417GS6dxQ7CIf65+iA==\",\"TheaterCd\":\"LMP+XuzWskJLFG41YQ7HGA==\",\"PlayYMD\":\"JFQ+RQXJ8Uin2E/NDXx6+Q==\",\"ScreenCd\":\"puE6q/PuILVnVlbgI8uHnA==\",\"PlayNum\":\"K69H87N+CcalH4eFao/hAQ==\"}", "17:45"]
-            # 용아맥 0512 2115
-            payload3 = ["{\"REQSITE\":\"x02PG4EcdFrHKluSEQQh4A==\",\"Language\":\"zqWM417GS6dxQ7CIf65+iA==\",\"TheaterCd\":\"LMP+XuzWskJLFG41YQ7HGA==\",\"PlayYMD\":\"JFQ+RQXJ8Uin2E/NDXx6+Q==\",\"ScreenCd\":\"puE6q/PuILVnVlbgI8uHnA==\",\"PlayNum\":\"GQ4XBvPgo294+v/kGdDx+Q==\"}", "21:15"]
 
-            payload = [payload1[0], payload2[0], payload3[0]]
+            payload = []
+            data_info = []
+
+            for pd in payloads_with_data:
+                payload.append(pd[0])
+                data_info.append(pd[1])
+
             headers = {
                 'accept': "application/json, text/javascript, */*; q=0.01",
                 'origin': "http://ticket.cgv.co.kr",
@@ -119,50 +69,53 @@ if __name__ == "__main__":
             data = res.read()
 
             jsonDict = json.loads(data)
-            xmlTree = ET.ElementTree(ET.fromstring(jsonDict['d']['data']['DATA']))
+            xmlTree = ElementTree.ElementTree(ElementTree.fromstring(jsonDict['d']['data']['DATA']))
             root = xmlTree.getroot()
             res = root.find('SEAT_INFO')
-            conn_seat = 0
-            seat_info = {"seat_loc_no": [], "loc_y_nm": [], "seat_no": []}
+            seat_info = {"seat_loc_no": "", "loc_y_nm": "", "seat_no": ""}
+            found_ticket = False
+            preferredSeat = []
+            availSeat = []
+            if count == 1:
+                for info in data_info:
+                    print(*info)
+                print("검색대상 좌석 : " + preferredSeatLineStart + str(preferredSeatNoStart) + " - " + preferredSeatLineEnd + str(preferredSeatNoEnd))
             for child in root:
                 if child.tag == "SEAT_INFO":
-                    seat = child
-                    if seat.find("SEAT_STATE").text == "Y":
-                        seat_info['seat_loc_no'].append(seat.find("SEAT_LOC_NO").text)
-                        seat_info['loc_y_nm'].append(seat.find("LOC_Y_NM").text[:1])
-                        seat_info['seat_no'].append(seat.find("SEAT_NO").text)
-                        availSeat = seat_info['loc_y_nm'][conn_seat] + str(seat_info['seat_no'][conn_seat][1:])
-                        if check_seat_preferred_line(seat_info['loc_y_nm'][conn_seat]) and check_seat_preferred_no(seat_info['seat_no'][conn_seat]):
-                            if int(ReseveCnt) >= conn_seat + 1:
-                                if conn_seat == 0:
-                                    conn_seat += 1
+                    # 예매가 안된 자리 체크
+                    if child.find("SEAT_STATE").text == "Y":
+                        # seat_info에 해당 자리 정보 저장
+                        seat_info['seat_loc_no'] = child.find("SEAT_LOC_NO").text
+                        seat_info['loc_y_nm'] = child.find("LOC_Y_NM").text[:1]
+                        seat_info['seat_no'] = child.find("SEAT_NO").text
+                        availSeat_tmp = seat_info['loc_y_nm'] + str(seat_info['seat_no'][1:])
+                        # preferredSeat 검사
+                        if check_seat_preferred_line(seat_info['loc_y_nm']) and check_seat_preferred_no(seat_info['seat_no']):
+                            # preferredSeat에 추가
+                            preferredSeat.append(seat_info.copy())
+                            availSeat.append(availSeat_tmp)
+                            # 하나만 발견해도 노티 달라고 해놨다면
+                            if also_notify_just_one:
+                                # 일단 하나 노티
+                                print("Found One Ticket for " + data_info[count % len(payload)] + ", " + availSeat[-1])
+                                notify(title="CGV", subtitle="1 Ticket", message=data_info[count % len(payload)])
+                            # 아직 원하는 자릿수만큼 preferredSeat를 찾지 못했다면
+                            if len(preferredSeat) <= int(num_of_people) and len(preferredSeat) != 1:
+                                # 연석인지 체크해서 아니면 preferredSeat 후보에서 삭제하고 다시 loop
+                                if not preferredSeat[len(preferredSeat) - 2]['loc_y_nm'] == seat_info['loc_y_nm'] and \
+                                 not int(seat_info['seat_no']) - int(preferredSeat[len(preferredSeat) - 2]['seat_no']) == 1:
+                                    preferredSeat = []
+                                    availSeat = []
+                                    found_ticket = False
                                     continue
-                                else:
-                                    if seat_info['loc_y_nm'][conn_seat - 1] == seat_info['loc_y_nm'][conn_seat] and \
-                                     int(seat_info['seat_no'][conn_seat]) - int(seat_info['seat_no'][conn_seat - 1]) == 1:
-                                        conn_seat += 1
-                            if int(ReseveCnt) == conn_seat:
-                                print("GOTCHA for " + str(count % 2))
-                                a = zip(seat_info["loc_y_nm"], seat_info["seat_no"], seat_info["seat_loc_no"])
-                                print(*a)
-                                os.system('say "I got a ticket"')
-                                notify("Got CGV Ticket", payload[count % len(payload)][1])
-                                os.system('say "I got a ticket"')
-                                os.system('say "I got a ticket"')
-                                os.system('say "I got a ticket"')
-                                os.system('say "I got a ticket"')
-
-                        else:
-                            seat_info["seat_loc_no"] = []
-                            seat_info["loc_y_nm"] = []
-                            seat_info["seat_no"] = []
-                            conn_seat = 0
-                            continue
+                        if int(num_of_people) == len(preferredSeat):
+                            print("Found Whole Ticket for " + data_info[count % len(payload)] + " ", end='', flush=True)
+                            print(*availSeat)
+                            notify(title="CGV", subtitle=num_of_people + " Tickets", message=str(data_info[count % len(payload)]))
+                            found_ticket = True
                     else:
-                        seat_info["seat_loc_no"] = []
-                        seat_info["loc_y_nm"] = []
-                        seat_info["seat_no"] = []
-                        conn_seat = 0
+                        preferredSeat = []
+                        availSeat = []
                         continue
             print(".", end='', flush=True)
             time.sleep(2 / len(payload))
@@ -171,24 +124,3 @@ if __name__ == "__main__":
             os.system('say "Error"')
             time.sleep(1)
             continue
-
-
-"""
-
-LOC_Y_NM: "A"
-MEMBER_ID: "parkjy1917"
-MOBILE_NO: "r7U7j0uw7P3/fDQ4iEE1TA=="
-MOVIE_CD: "20019370"
-PLAY_TIME_CD: "26"
-PlayNum: "4"
-PlayYMD: "20190503"
-ReseveCnt: 1
-SEAT_NM: "019"
-SOCIAL_NO: "900104"
-ScreenCd: "018"
-SeatInfo: "00102101"
-SeatPriceInfo: "21000"
-SeatRatingInfo: "01"
-TheaterCd: "0013"
-TicketTypeInfo: "01"
-"""
