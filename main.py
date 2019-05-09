@@ -10,7 +10,7 @@ os_name = os.name
 num_of_people = "2"
 
 # 대충 보면 알것같고..
-preferredSeatLineStart = "A"
+preferredSeatLineStart = "G"
 preferredSeatNoStart = 12
 preferredSeatLineEnd = "L"
 preferredSeatNoEnd = 32
